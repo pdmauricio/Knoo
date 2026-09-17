@@ -1,0 +1,13 @@
+.App h1{
+  text-align: center;
+}
+
+.container{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+   background-color: #D9D9D9; /* fondo gris claro (puedes cambiarlo o usar una imagen) */
+  padding: 30px;             /* espacio interno: evita que los elementos choquen con los bordes */
+  margin: auto; 
+}

@@ -1,0 +1,332 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #f0f4f8;
+}
+
+.search-bar {
+  margin: 1rem 0 2rem;
+  text-align: center;
+}
+
+.search-bar input {
+  width: 100%;
+  max-width: 500px;
+  padding: 0.8rem 1.2rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.cursos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.curso-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.curso-card:hover {
+  transform: translateY(-5px);
+}
+
+.horarios-disponibles {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  color:black;
+  border-top: 1px solid #e2e8f0;
+}
+
+.horario-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.horario-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dia-hora {
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.profesor {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.profesor-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  color:black;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.profesor-name {
+  color: #1e40af;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.no-horarios {
+  color: #64748b;
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #3b82f6;
+  font-size: 1.2rem;
+}
+
+.no-cursos {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+}
+
+.matricula-btn {
+  background: #3b82f6;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.matricula-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.matricula-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.cursos-matriculados-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.curso-matriculado-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.estado-activo {
+  color: #059669;
+  background: #d1fae5;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.horario-personalizado {
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.horario-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color:black;
+}
+
+.horario-table th,
+.horario-table td {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  min-width: 150px;
+  height: 100px;
+  vertical-align: top;
+}
+
+.horario-table th {
+  background: #1e3a8a;
+  color: white;
+  font-weight: 600;
+}
+
+.curso-cell {
+  background-color: #dbeafe;
+  min-height: 80px;
+}
+
+.curso-info {
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: white;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.curso-nombre {
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.25rem;
+}
+
+.curso-profesor {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.hora-cell {
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+.ya-matriculado {
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 4px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.desmatricula-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.desmatricula-btn:hover {
+  background: #dc2626;
+}
+
+.perfil-container {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.perfil-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.perfil-avatar {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  margin: 0 auto 1rem;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.perfil-role {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.info-item {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.info-item label {
+  display: block;
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
