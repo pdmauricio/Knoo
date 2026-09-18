@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-const { convertTo24Hour, convertTo12Hour } = require("../utils/timeUtils");
+const { convertTo24Hour, convertTo12Hour } = require("../utils/timeUtil");
 const { generateRDFFromDB } = require("../utils/rdfGenerator");
 const { generateGraphDataFromDB } = require("../utils/graphGenerator");
 

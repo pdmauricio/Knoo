@@ -1,4 +1,4 @@
-const { convertTo12Hour } = require("./timeUtils");
+const { convertTo12Hour } = require("./timeUtil");
 
 // Genera la estructura de nodos/enlaces (grafo) para visualizar profesor -> cursos -> horarios -> estudiantes
 function generateGraphDataFromDB(docente, cursosData, estudiantesData) {

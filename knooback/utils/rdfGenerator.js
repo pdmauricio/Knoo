@@ -1,4 +1,4 @@
-const { convertTo12Hour } = require("./timeUtils");
+const { convertTo12Hour } = require("./timeUtil");
 
 // Genera el documento RDF/XML a partir de los datos del docente, sus cursos y estudiantes
 function generateRDFFromDB(docente, cursosData, estudiantesData) {

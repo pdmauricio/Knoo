@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-const { convertTo12Hour } = require("../utils/timeUtils");
+const { convertTo12Hour } = require("../utils/timeUtil");
 
 exports.getCursos = async (req, res) => {
   try {

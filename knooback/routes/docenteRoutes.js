@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const docenteController = require("../controllers/docenteController");
+const docenteController = require("../controllers/docenteControllers");
 const { authenticateToken } = require("../middleware/authMiddleware");
 
 router.get("/cursos", authenticateToken, docenteController.getCursos);
