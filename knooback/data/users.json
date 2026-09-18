@@ -1,0 +1,159 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "profesor@test.com",
+      "password": "$2a$10$XZJ5c8wIzWn1XzL1l1Kz7O5V5V5v5v5v5v5v5v5v5v5v5v5v5v",
+      "name": "Juan Profesor",
+      "username": "profejuan",
+      "role": "docente",
+      "courses": []
+    },
+    {
+      "id": "2",
+      "email": "yahir@gmail.com",
+      "password": "$2b$10$2Q2iRCjLYjF3PkvgIhE2iuFFlmfOdJgUHEJfiUUvG15a7Y2cV679y",
+      "username": "Yahir123",
+      "name": "Yahir Sergio Choquehuanca Chipana",
+      "role": "docente",
+      "courses": [
+        {
+          "id": "1",
+          "horarios": [
+            {
+              "dia": "Lunes",
+              "horario": "8:00 AM - 10:00 AM"
+            },
+            {
+              "dia": "Martes",
+              "horario": "8:00 AM - 10:00 AM"
+            },
+            {
+              "dia": "Miércoles",
+              "horario": "8:00 AM - 10:00 AM"
+            },
+            {
+              "dia": "Jueves",
+              "horario": "8:00 AM - 10:00 AM"
+            },
+            {
+              "dia": "Viernes",
+              "horario": "8:00 AM - 10:00 AM"
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "horarios": [
+            {
+              "dia": "Lunes",
+              "horario": "4:00 PM - 6:00 PM"
+            },
+            {
+              "dia": "Martes",
+              "horario": "4:00 PM - 6:00 PM"
+            },
+            {
+              "dia": "Miércoles",
+              "horario": "4:00 PM - 6:00 PM"
+            },
+            {
+              "dia": "Jueves",
+              "horario": "4:00 PM - 6:00 PM"
+            },
+            {
+              "dia": "Viernes",
+              "horario": "4:00 PM - 6:00 PM"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "horarios": [
+            {
+              "dia": "Martes",
+              "horario": "2:00 PM - 4:00 PM"
+            },
+            {
+              "dia": "Jueves",
+              "horario": "2:00 PM - 4:00 PM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "email": "Alumno@gmail.com",
+      "password": "$2b$10$tK.zJs21wrVIUmxAAUwmlO7LxqX3HuvBVXZuR5qrvowzz/cDYWL.m",
+      "username": "Alumno",
+      "name": "Alumno",
+      "role": "estudiante",
+      "courses": []
+    },
+    {
+      "id": "4",
+      "email": "Juan@gmail.com",
+      "password": "$2b$10$KmgcNSep3xgXEkiFPWF6b.V8zXoGtjj73TH062IcJ5Vc1gRPK8l5S",
+      "username": "Juan",
+      "name": "Juan",
+      "role": "estudiante",
+      "courses": []
+    },
+    {
+      "id": "5",
+      "email": "Jose@gmail.com",
+      "password": "$2b$10$AD/ldT7.lqFg5oEVwoNRl.KEk9PrSg9CLD8817kBXwAs1Od44j6Xa",
+      "username": "Jose",
+      "name": "Jose",
+      "role": "docente",
+      "courses": [
+        {
+          "id": "1",
+          "horarios": [
+            {
+              "dia": "Lunes",
+              "horario": "2:00 PM - 4:00 PM"
+            },
+            {
+              "dia": "Viernes",
+              "horario": "2:00 PM - 4:00 PM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "email": "jose123@gmail.com",
+      "password": "$2b$10$cjJm7Fv.Z7qLJlMmLtIfYu3d2cFtm5PunyB1sdsQHz1e0kBmsBv0O",
+      "username": "jose123",
+      "name": "Jose",
+      "role": "docente",
+      "courses": [
+        {
+          "id": "1",
+          "horarios": [
+            {
+              "dia": "Martes",
+              "horario": "8:00 AM - 10:00 AM"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "horarios": [
+            {
+              "dia": "Miércoles",
+              "horario": "8:00 AM - 10:00 AM"
+            },
+            {
+              "dia": "Jueves",
+              "horario": "8:00 AM - 10:00 AM"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

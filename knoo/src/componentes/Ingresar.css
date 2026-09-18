@@ -1,0 +1,22 @@
+.ingresar-container {
+  display: flex;
+  justify-content: center; /* centra horizontalmente */
+  align-items: center;     /* centra verticalmente */
+  margin-top: 30px;
+}
+
+.ingresar-boton {
+  background-color: white;
+  color: black;
+  padding: 15px 45px;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 40px; 
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ingresar-boton:hover {
+  background-color: rgb(0, 0, 0);
+  color: rgb(245, 245, 245);
+}

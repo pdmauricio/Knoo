@@ -1,0 +1,11 @@
+# Ignorar secretos de base de datos
+.env
+*.env
+
+# Ignorar librerías pesadas de Node.js
+node_modules/
+**/node_modules/
+
+# Ignorar archivos temporales
+.scannerwork/
+**/.scannerwork/

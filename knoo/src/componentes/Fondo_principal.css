@@ -1,0 +1,39 @@
+.fondo {
+  height: 100vh;
+  width: 100%;
+  background-image: linear-gradient(to bottom right, rgba(30, 58, 138, 0.9), rgba(59, 130, 246, 0.9)), url("./imagenes/Fondo_principal.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.fondo h1 {
+  font-size: 8rem;
+  margin: 0;
+  letter-spacing: 8px;
+  font-weight: 800;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  animation: fadeInSlide 1.5s ease-out;
+  background: linear-gradient(to right, #ffffff, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,29 @@
+.preguntas-container {
+  display: flex;            /* las pone en línea horizontal */
+  justify-content: center;  /* centra horizontalmente */
+  align-items: flex-start;  /* alinea arriba si las respuestas varían en altura */
+  gap: 20px;                /* separa una pregunta de otra */
+  flex-wrap: wrap;          /* permite que bajen de línea si no caben */
+}
+
+.pregunta {
+  display: flex;
+  flex-direction: column;   /* botón arriba, respuesta abajo */
+  align-items: center;
+  text-align: center;
+}
+
+button {
+  background-color: white;
+  color: black;
+  border: 2px solid #000;
+  border-radius: 25px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: black;
+  color: white;
+}

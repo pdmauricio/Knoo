@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:18
+    container_name: knoo_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: knoo
+      POSTGRES_USER: knoo_user
+      POSTGRES_PASSWORD: change_me_local_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      # Estos scripts se ejecutan SOLO la primera vez que se crea el volumen
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+
+  adminer:
+    image: adminer
+    container_name: knoo_adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
