@@ -93,4 +93,8 @@ indexación alternativa (Skip List) y distribución de datos sobre PostgreSQL.
 
 ## Integrantes
 
-- (completar con los 5 integrantes del grupo)
+- Mauri
+- Leo
+- Anibal
+- Ariana
+- Esteban
