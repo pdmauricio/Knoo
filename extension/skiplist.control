@@ -1,0 +1,5 @@
+# skiplist.control
+comment = 'Skip List Access Method para PostgreSQL'
+default_version = '1.0'
+module_pathname = '$libdir/skiplist'
+relocatable = true
