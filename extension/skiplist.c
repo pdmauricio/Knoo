@@ -5,7 +5,8 @@
 #include "commands/defrem.h"
 #include "nodes/pathnodes.h"
 #include "catalog/index.h"
-
+#include "access/itup.h"
+#include "access/tableam.h"  /* Necesario para table_index_build_scan */
 #include "storage/bufmgr.h"
 #include "storage/bufpage.h"
 #include "skiplist.h"
@@ -14,7 +15,138 @@
 PG_MODULE_MAGIC;
 
 /* ====================================================================
- * 1. DECLARACIÓN DE LAS FUNCIONES OBLIGATORIAS (STUBS)
+ * FUNCIONES AUXILIARES (PIEZAS 1, 2, 3 Y 4)
+ * ==================================================================== */
+
+/* Pieza 1: Funciones de lectura y comparación */
+static Datum skiplist_get_key(Relation index, BlockNumber blk, bool *isnull) {
+    Buffer      buffer;
+    Page        page;
+    ItemId      itemid;
+    IndexTuple  itup;
+    Datum       key;
+
+    buffer = ReadBuffer(index, blk);
+    LockBuffer(buffer, BUFFER_LOCK_SHARE);
+    page = BufferGetPage(buffer);
+    itemid = PageGetItemId(page, FirstOffsetNumber);
+    itup = (IndexTuple) PageGetItem(page, itemid);
+    key = index_getattr(itup, 1, RelationGetDescr(index), isnull);
+    UnlockReleaseBuffer(buffer);
+    return key;
+}
+
+static void skiplist_get_opaque(Relation index, BlockNumber blk, SkipListOpaqueData *out) {
+    Buffer buffer;
+    Page   page;
+
+    buffer = ReadBuffer(index, blk);
+    LockBuffer(buffer, BUFFER_LOCK_SHARE);
+    page = BufferGetPage(buffer);
+    memcpy(out, PageGetSpecialPointer(page), sizeof(SkipListOpaqueData));
+    UnlockReleaseBuffer(buffer);
+}
+
+static int32 skiplist_compare(Datum a, Datum b) {
+    return DatumGetInt32(a) - DatumGetInt32(b);
+}
+
+/* Pieza 2: Generación de nivel aleatorio */
+static int skiplist_random_level(void) {
+    int lvl = 0;
+    while (((double) rand() / RAND_MAX) < 0.5 && lvl < SKIPLIST_MAXLEVEL - 1)
+        lvl++;
+    return lvl;
+}
+
+/* Pieza 3: Función principal de inserción */
+static void skiplist_insert_tuple(Relation index, Datum key, ItemPointer heap_tid) {
+    BlockNumber update[SKIPLIST_MAXLEVEL];
+    BlockNumber old_next[SKIPLIST_MAXLEVEL];
+    BlockNumber current_block = 0;      /* 0 = header */
+    SkipListOpaqueData current_opaque;
+    int         i, new_level;
+    Buffer      newbuf;
+    Page        newpage;
+    SkipListOpaque new_opaque;
+    BlockNumber newblk;
+    IndexTuple  itup;
+    Datum       values[1];
+    bool        isnull[1] = { false };
+
+    /* FASE 1: Buscar posición */
+    skiplist_get_opaque(index, current_block, &current_opaque);
+    for (i = SKIPLIST_MAXLEVEL - 1; i >= 0; i--) {
+        while (current_opaque.forward[i] != InvalidBlockNumber) {
+            bool   next_isnull;
+            Datum  next_key = skiplist_get_key(index, current_opaque.forward[i], &next_isnull);
+            if (skiplist_compare(next_key, key) < 0) {
+                current_block = current_opaque.forward[i];
+                skiplist_get_opaque(index, current_block, &current_opaque);
+            } else {
+                break;
+            }
+        }
+        update[i] = current_block;
+    }
+
+    /* FASE 2: Decidir nivel */
+    new_level = skiplist_random_level();
+
+    /* FASE 3: Obtener referencias a predecesores */
+    for (i = 0; i <= new_level; i++) {
+        SkipListOpaqueData pred_opaque;
+        skiplist_get_opaque(index, update[i], &pred_opaque);
+        old_next[i] = pred_opaque.forward[i];
+    }
+
+    /* FASE 4: Crear la nueva página física */
+    newbuf = ReadBuffer(index, P_NEW);
+    LockBuffer(newbuf, BUFFER_LOCK_EXCLUSIVE);
+    newpage = BufferGetPage(newbuf);
+    PageInit(newpage, BufferGetPageSize(newbuf), sizeof(SkipListOpaqueData));
+    newblk = BufferGetBlockNumber(newbuf);
+
+    values[0] = key;
+    itup = index_form_tuple(RelationGetDescr(index), values, isnull);
+    itup->t_tid = *heap_tid;
+
+    if (PageAddItem(newpage, (Item) itup, IndexTupleSize(itup), InvalidOffsetNumber, false, false) == InvalidOffsetNumber) {
+        elog(ERROR, "skiplist: no se pudo insertar la tupla en la pagina nueva");
+    }
+
+    new_opaque = (SkipListOpaque) PageGetSpecialPointer(newpage);
+    new_opaque->max_level = new_level;
+    for (i = 0; i < SKIPLIST_MAXLEVEL; i++) {
+        new_opaque->forward[i] = (i <= new_level) ? old_next[i] : InvalidBlockNumber;
+    }
+
+    MarkBufferDirty(newbuf);
+    UnlockReleaseBuffer(newbuf);
+    pfree(itup);
+
+    /* FASE 5: Enlazar predecesores al nuevo nodo */
+    for (i = 0; i <= new_level; i++) {
+        Buffer predbuf = ReadBuffer(index, update[i]);
+        LockBuffer(predbuf, BUFFER_LOCK_EXCLUSIVE);
+        Page predpage = BufferGetPage(predbuf);
+        SkipListOpaque pred_opaque = (SkipListOpaque) PageGetSpecialPointer(predpage);
+        pred_opaque->forward[i] = newblk;
+        MarkBufferDirty(predbuf);
+        UnlockReleaseBuffer(predbuf);
+    }
+}
+
+/* Pieza 4: Callback de escaneo */
+static void skiplist_build_callback(Relation index, ItemPointer tid, Datum *values,
+                                   bool *isnull, bool tupleIsAlive, void *state) {
+    double *count = (double *) state;
+    skiplist_insert_tuple(index, values[0], tid);
+    (*count)++;
+}
+
+/* ====================================================================
+ * 1. DECLARACIÓN DE LAS FUNCIONES OBLIGATORIAS (STUBS Y IMPLEMENTACIÓN)
  * ==================================================================== */
 
 static IndexBuildResult *skiplistbuild(Relation heap, Relation index, IndexInfo *indexInfo) {
@@ -23,39 +155,44 @@ static IndexBuildResult *skiplistbuild(Relation heap, Relation index, IndexInfo 
     Page page;
     SkipListOpaque opaque;
     int i;
+    double reltuples = 0;
 
     /* 1. Pedimos a Postgres que cree un bloque físico nuevo (P_NEW) para este índice */
     buffer = ReadBuffer(index, P_NEW);
 
-    /* 2. Bloqueamos la página en RAM para evitar que otro proceso escriba al mismo tiempo */
+    /* 2. Bloqueamos la página en RAM */
     LockBuffer(buffer, BUFFER_LOCK_EXCLUSIVE);
 
-    /* 3. Obtenemos el puntero a los 8192 bytes de la página */
+    /* 3. Obtenemos el puntero a la página */
     page = BufferGetPage(buffer);
 
-    /* 4. Inicializamos la página, reservando exactamente el tamaño de nuestro struct al final */
+    /* 4. Inicializamos la página */
     PageInit(page, BufferGetPageSize(buffer), sizeof(SkipListOpaqueData));
 
-    /* 5. Accedemos al Special Space y configuramos nuestro macro-nodo */
+    /* 5. Configurar nodo raíz */
     opaque = (SkipListOpaque) PageGetSpecialPointer(page);
-    opaque->max_level = 1; /* Inicia en el nivel base */
+    opaque->max_level = 1;
     
     for (i = 0; i < SKIPLIST_MAXLEVEL; i++) {
-        opaque->forward[i] = InvalidBlockNumber; /* InvalidBlockNumber es el equivalente a NULL en disco */
+        opaque->forward[i] = InvalidBlockNumber;
     }
 
-    /* 6. AVISO CRÍTICO: Marcamos el buffer como sucio para que Postgres lo guarde en disco */
+    /* 6. Marcar buffer dirty */
     MarkBufferDirty(buffer);
 
-    /* 7. Soltamos el bloqueo y liberamos el buffer de nuestra memoria */
+    /* 7. Soltar bloqueo */
     UnlockReleaseBuffer(buffer);
 
     elog(NOTICE, "skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.");
 
-    /* 8. Preparamos el reporte final de la construcción (0 tuplas por ahora) */
+    /* 8. Escaneo de la tabla e inserción de tuplas existentes (Pieza 4) */
+    reltuples = table_index_build_scan(heap, index, indexInfo, true, true,
+                                        skiplist_build_callback,
+                                        (void *) &reltuples, NULL);
+
     result = (IndexBuildResult *) palloc0(sizeof(IndexBuildResult));
-    result->heap_tuples = 0;
-    result->index_tuples = 0;
+    result->heap_tuples = reltuples;
+    result->index_tuples = reltuples;
 
     return result;
 }
@@ -67,9 +204,9 @@ static void skiplistbuildempty(Relation index) {
 static bool skiplistinsert(Relation rel, Datum *values, bool *isnull, 
                            ItemPointer ht_ctid, Relation heapRel, 
                            IndexUniqueCheck checkUnique, 
-                           bool indexUnchanged, /* <-- Nuevo parámetro requerido por PG18 */
+                           bool indexUnchanged, 
                            IndexInfo *indexInfo) {
-    elog(NOTICE, "skiplistinsert: Insertando dato (Simulacion)");
+    skiplist_insert_tuple(rel, values[0], ht_ctid);
     return false;
 }
 
@@ -81,7 +218,7 @@ static IndexBulkDeleteResult *skiplistbulkdelete(IndexVacuumInfo *info,
 }
 
 static IndexBulkDeleteResult *skiplistvacuumcleanup(IndexVacuumInfo *info, 
-                                                    IndexBulkDeleteResult *stats) {
+                                                   IndexBulkDeleteResult *stats) {
     return NULL;
 }
 
@@ -119,7 +256,7 @@ static void skiplistendscan(IndexScanDesc scan) {
 }
 
 /* ====================================================================
- * 2. EL HANDLER PRINCIPAL (El que definiste en SQL)
+ * 2. EL HANDLER PRINCIPAL
  * ==================================================================== */
 
 PG_FUNCTION_INFO_V1(skiplisthandler);
@@ -127,22 +264,17 @@ PG_FUNCTION_INFO_V1(skiplisthandler);
 Datum skiplisthandler(PG_FUNCTION_ARGS) {
     IndexAmRoutine *amroutine = makeNode(IndexAmRoutine);
 
-    /* Metadatos básicos */
-    amroutine->amstrategies = 5;  /* Soportaremos operadores básicos como B-Tree */
-    amroutine->amsupport = 1;     /* Función de comparación */
+    amroutine->amstrategies = 5;
+    amroutine->amsupport = 1;
     amroutine->amoptsprocnum = 0;
 
-    /* Capacidades del índice (flags) */
     amroutine->amcanorder = false;
     amroutine->amcanunique = false;
     amroutine->amcanmulticol = false;
     amroutine->amoptionalkey = true;
     amroutine->amsearcharray = false;
     amroutine->amsearchnulls = false;
-    // amroutine->amhasgettuple = true;
-    // amroutine->amhasgetbitmap = false;
-    
-    /* Vinculamos la estructura con nuestras funciones de arriba */
+
     amroutine->ambuild = skiplistbuild;
     amroutine->ambuildempty = skiplistbuildempty;
     amroutine->aminsert = skiplistinsert;
