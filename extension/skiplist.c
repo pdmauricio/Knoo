@@ -1,3 +1,5 @@
+#include <math.h>            /* log() para amcostestimate */
+
 #include "postgres.h"
 #include "fmgr.h"
 #include "access/amapi.h"
@@ -9,6 +11,7 @@
 #include "access/tableam.h"  /* Necesario para table_index_build_scan */
 #include "storage/bufmgr.h"
 #include "storage/bufpage.h"
+#include "optimizer/cost.h"  /* random_page_cost, cpu_index_tuple_cost, cpu_operator_cost */
 #include "skiplist.h"
 
 /* Macro obligatoria para la compatibilidad del módulo */
@@ -226,15 +229,57 @@ static bytea *skiplistoptions(Datum reloptions, bool validate) {
     return NULL;
 }
 
-static void skiplistcostestimate(PlannerInfo *root, IndexPath *path, double loop_count, 
-                                 Cost *indexStartupCost, Cost *indexTotalCost, 
-                                 Selectivity *indexSelectivity, double *indexCorrelation, 
-                                 double *indexPages) {
-    *indexStartupCost = 100.0;
-    *indexTotalCost = 100.0;
-    *indexSelectivity = 0.5;
+static void skiplistcostestimate(PlannerInfo *root, IndexPath *path, double loop_count,
+                                 Cost *indexStartupCost, Cost *indexTotalCost,
+                                 Selectivity *indexSelectivity, double *indexCorrelation,
+                                 double *indexPages)
+{
+    IndexOptInfo   *index       = path->indexinfo;
+    double          num_tuples  = Max(index->tuples, 1.0);
+    double          num_pages   = Max(index->pages,  1.0);
+
+    /*
+     * Selectividad: si hay cláusulas de igualdad (=) asumimos 1/num_tuples,
+     * es decir una sola fila.  Si hay rango (<, >) asumimos 10 % de la tabla.
+     * Si no hay cláusulas (escaneo completo) usamos 1.0.
+     */
+    if (path->indexclauses != NIL)
+    {
+        /* Estimado conservador: una fracción pequeña de las filas */
+        *indexSelectivity = 1.0 / num_tuples;
+        /* Clamp entre 1 tupla y el 10 % de la tabla */
+        if (*indexSelectivity < 1.0 / num_tuples)
+            *indexSelectivity = 1.0 / num_tuples;
+        if (*indexSelectivity > 0.1)
+            *indexSelectivity = 0.1;
+    }
+    else
+    {
+        *indexSelectivity = 1.0;   /* sin filtro → toda la tabla */
+    }
+
+    /*
+     * Páginas estimadas a leer: el skip list tiene profundidad log2(N).
+     * Añadimos 1 para la página raíz (cabecera).
+     */
+    *indexPages = 1.0 + log(num_pages) / log(2.0);
+
+    /*
+     * Costos:
+     *   - Startup : costar de bajar por los niveles del skip list (≈ log N * random_page_cost)
+     *   - Total   : startup + páginas a leer × random_page_cost + CPU por tupla devuelta
+     */
+    *indexStartupCost = *indexPages * random_page_cost;
+    *indexTotalCost   = *indexStartupCost
+                        + (*indexSelectivity * num_tuples) * cpu_index_tuple_cost
+                        + (*indexSelectivity * num_tuples) * cpu_operator_cost;
+
+    /*
+     * Correlación: el skip list mantiene orden, así que la correlación
+     * con el heap es moderada-positiva (similar a un B-tree con inserciones
+     * aleatorias).  Usamos 0.5 como aproximación conservadora.
+     */
     *indexCorrelation = 0.5;
-    *indexPages = 1.0;
 }
 
 static IndexScanDesc skiplistbeginscan(Relation rel, int nkeys, int norderbys) {

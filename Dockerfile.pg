@@ -1,0 +1,23 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Dockerfile.pg  –  PostgreSQL 18 + extensión skiplist compilada al momento
+# ─────────────────────────────────────────────────────────────────────────────
+FROM postgres:18
+
+# 1. Instalar herramientas de compilación y cabeceras de desarrollo de Postgres
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        postgresql-server-dev-18 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Copiar los fuentes de la extensión
+COPY extension/ /tmp/skiplist_ext/
+
+# 3. Compilar e instalar con PGXS
+RUN cd /tmp/skiplist_ext \
+    && make -f makefile \
+    && make -f makefile install \
+    && rm -rf /tmp/skiplist_ext
+
+# 4. Script de inicialización: carga la extensión y el dataset de benchmark
+#    (se ejecuta una sola vez cuando el volumen está vacío)
+COPY db/init_skiplist.sql /docker-entrypoint-initdb.d/03_skiplist.sql
