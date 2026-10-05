@@ -179,6 +179,17 @@ static void skiplist_build_callback(Relation index, ItemPointer tid, Datum* valu
 }
 
 /* ====================================================================
+ * Pieza 5: Estado de un escaneo (búsqueda) en curso
+ * ==================================================================== */
+typedef struct SkipListScanOpaqueData {
+    Datum   search_key;        /* el valor que busca el WHERE columna = X */
+    bool    key_is_set;        /* ¿ya nos dieron un valor para buscar? */
+    bool    already_returned;  /* como es busqueda por igualdad, hay máximo 1 resultado */
+} SkipListScanOpaqueData;
+
+typedef SkipListScanOpaqueData *SkipListScanOpaque;
+
+/* ====================================================================
  * 1. FUNCIONES DEL ACCESS METHOD
  * ==================================================================== */
 
@@ -226,12 +237,6 @@ static void skiplistbuildempty(Relation index) {
     elog(NOTICE, "skiplistbuildempty: Inicializando indice vacio");
 }
 
-/*
- * TAREA 10: aminsert.
- * Postgres lo llama por cada INSERT en la tabla cuando el indice ya existe.
- * Reutiliza skiplist_insert_tuple (la misma logica de ambuild), pero
- * operando de a una fila.
- */
 static bool skiplistinsert(Relation rel, Datum* values, bool* isnull,
     ItemPointer ht_ctid, Relation heapRel,
     IndexUniqueCheck checkUnique,
@@ -269,16 +274,9 @@ static void skiplistcostestimate(PlannerInfo *root, IndexPath *path, double loop
     double          num_tuples  = Max(index->tuples, 1.0);
     double          num_pages   = Max(index->pages,  1.0);
 
-    /*
-     * Selectividad: si hay cláusulas de igualdad (=) asumimos 1/num_tuples,
-     * es decir una sola fila.  Si hay rango (<, >) asumimos 10 % de la tabla.
-     * Si no hay cláusulas (escaneo completo) usamos 1.0.
-     */
     if (path->indexclauses != NIL)
     {
-        /* Estimado conservador: una fracción pequeña de las filas */
         *indexSelectivity = 1.0 / num_tuples;
-        /* Clamp entre 1 tupla y el 10 % de la tabla */
         if (*indexSelectivity < 1.0 / num_tuples)
             *indexSelectivity = 1.0 / num_tuples;
         if (*indexSelectivity > 0.1)
@@ -286,56 +284,104 @@ static void skiplistcostestimate(PlannerInfo *root, IndexPath *path, double loop
     }
     else
     {
-        *indexSelectivity = 1.0;   /* sin filtro → toda la tabla */
+        *indexSelectivity = 1.0;
     }
 
-    /*
-     * Páginas estimadas a leer: el skip list tiene profundidad log2(N).
-     * Añadimos 1 para la página raíz (cabecera).
-     */
     *indexPages = 1.0 + log(num_pages) / log(2.0);
 
-    /*
-     * Costos:
-     *   - Startup : costar de bajar por los niveles del skip list (≈ log N * random_page_cost)
-     *   - Total   : startup + páginas a leer × random_page_cost + CPU por tupla devuelta
-     */
     *indexStartupCost = *indexPages * random_page_cost;
     *indexTotalCost   = *indexStartupCost
                         + (*indexSelectivity * num_tuples) * cpu_index_tuple_cost
                         + (*indexSelectivity * num_tuples) * cpu_operator_cost;
 
-    /*
-     * Correlación: el skip list mantiene orden, así que la correlación
-     * con el heap es moderada-positiva (similar a un B-tree con inserciones
-     * aleatorias). Usamos 0.5 como aproximación conservadora.
-     */
     *indexCorrelation = 0.5;
 }
 
+/* ====================================================================
+ * CICLO DE BÚSQUEDA (Issue #11)
+ * ==================================================================== */
+
 static IndexScanDesc skiplistbeginscan(Relation rel, int nkeys, int norderbys) {
-    elog(ERROR, "skiplistbeginscan: Las busquedas aun no estan implementadas");
-    return NULL;
+    IndexScanDesc scan;
+    scan = RelationGetIndexScan(rel, nkeys, norderbys);
+    scan->opaque = palloc0(sizeof(SkipListScanOpaqueData));
+    return scan;
 }
 
 static void skiplistrescan(IndexScanDesc scan, ScanKey keys, int nkeys,
-    ScanKey orderbys, int norderbys) {
-    /* Vacio por ahora */
+                           ScanKey orderbys, int norderbys) {
+    SkipListScanOpaque so = (SkipListScanOpaque) scan->opaque;
+    so->key_is_set = false;
+    so->already_returned = false;
+    if (nkeys > 0 && keys != NULL) {
+        so->search_key = keys[0].sk_argument;
+        so->key_is_set = true;
+    }
 }
 
 static bool skiplistgettuple(IndexScanDesc scan, ScanDirection dir) {
-    return false;
+    SkipListScanOpaque so = (SkipListScanOpaque) scan->opaque;
+    Relation    index = scan->indexRelation;
+    BlockNumber current_block = 0;      /* header */
+    SkipListOpaqueData current_opaque;
+    int         i;
+    BlockNumber candidate;
+    Datum       candidate_key;
+    bool        candidate_isnull;
+
+    if (!so->key_is_set || so->already_returned)
+        return false;
+
+    so->already_returned = true;
+
+    skiplist_get_opaque(index, current_block, &current_opaque);
+    for (i = SKIPLIST_MAXLEVEL - 1; i >= 0; i--) {
+        while (current_opaque.forward[i] != InvalidBlockNumber) {
+            bool  next_isnull;
+            Datum next_key = skiplist_get_key(index, current_opaque.forward[i], &next_isnull);
+            if (skiplist_compare(next_key, so->search_key) < 0) {
+                current_block = current_opaque.forward[i];
+                skiplist_get_opaque(index, current_block, &current_opaque);
+            } else {
+                break;
+            }
+        }
+    }
+
+    candidate = current_opaque.forward[0];
+    if (candidate == InvalidBlockNumber)
+        return false;
+
+    candidate_key = skiplist_get_key(index, candidate, &candidate_isnull);
+    if (skiplist_compare(candidate_key, so->search_key) != 0)
+        return false;
+
+    {
+        Buffer     buf = ReadBuffer(index, candidate);
+        Page       page;
+        ItemId     itemid;
+        IndexTuple itup;
+
+        LockBuffer(buf, BUFFER_LOCK_SHARE);
+        page = BufferGetPage(buf);
+        itemid = PageGetItemId(page, FirstOffsetNumber);
+        itup = (IndexTuple) PageGetItem(page, itemid);
+
+        scan->xs_heaptid = itup->t_tid;
+        scan->xs_recheck = false;
+        UnlockReleaseBuffer(buf);
+    }
+
+    return true;
 }
 
 static void skiplistendscan(IndexScanDesc scan) {
-    /* Vacio por ahora */
+    if (scan->opaque)
+        pfree(scan->opaque);
 }
 
 /* ====================================================================
- * 2. FUNCION DE DEPURACION (verificacion de Tarea 10)
- *    SELECT skiplist_dump('nombre_indice');
- *    Recorre la lista nivel por nivel y muestra clave y bloque de
- *    cada nodo enlazado.
+ * 2. FUNCION DE DEPURACION
  * ==================================================================== */
 
 PG_FUNCTION_INFO_V1(skiplist_dump);
