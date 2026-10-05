@@ -37,3 +37,11 @@ DEFAULT FOR TYPE int4 USING skiplist AS
     OPERATOR 4 >=,
     OPERATOR 5 >,
     FUNCTION 1 btint4cmp(int4, int4);
+
+
+-- Tarea 10: funcion de depuracion que recorre la skip list nivel por nivel
+-- y muestra (con NOTICE) las claves y bloques enlazados.
+CREATE FUNCTION skiplist_dump(regclass)
+RETURNS void
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;
