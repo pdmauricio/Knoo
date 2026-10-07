@@ -8,7 +8,10 @@ node_modules/
 
 # Ignorar archivos temporales
 .scannerwork/
-**/.scannerwork/*.o
+**/.scannerwork/
+
+# Ignorar binarios compilados de la extensión
+*.o
 *.so
 *.bc
 skiplistPrueba/skiplist
