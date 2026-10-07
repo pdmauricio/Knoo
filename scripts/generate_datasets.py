@@ -32,7 +32,7 @@ def generate_datasets():
         # D2: Enteros aleatorios reproducibles
         # (Rango 1 a N*2 para permitir una densidad razonable de valores únicos)
         # ---------------------------------------------------------
-        d2_data = rng.integers(1, size * 2, size=size)
+        d2_data = rng.choice(np.arange(1, size * 4), size=size, replace=False)
         save_csv(d2_data, f"D2_random_{size_label}.csv")
 
         # ---------------------------------------------------------
