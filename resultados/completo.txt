@@ -1,0 +1,355 @@
+===== corrida 1 =====
+============================================================
+ BENCHMARK  –  skip list vs B-tree vs seq scan
+ Dataset: bench_items (10 000 filas)
+============================================================
+ANALYZE
+
+--- CASO 1: Sequential Scan (sin índice) ---
+SET
+SET
+SET
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.006..0.219 rows=1.00 loops=1)
+   Filter: (valor = 106820)
+   Rows Removed by Filter: 9999
+   Buffers: shared hit=64
+ Planning:
+   Buffers: shared hit=17 read=1
+ Planning Time: 1.103 ms
+ Execution Time: 0.237 ms
+(8 rows)
+
+
+--- CASO 2: B-tree Index Scan ---
+DROP INDEX
+SET
+SET
+SET
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.727..0.727 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 1
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=6 dirtied=1
+ Planning Time: 0.043 ms
+ Execution Time: 0.734 ms
+(8 rows)
+
+
+--- CASO 3: Skip List Index ---
+DROP INDEX
+psql:/benchmark.sql:40: NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+ANALYZE
+SET
+SET
+SET
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.067..0.067 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 0
+   Buffers: shared hit=320
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.054 ms
+ Execution Time: 0.076 ms
+(8 rows)
+
+CREATE INDEX
+RESET
+RESET
+RESET
+
+============================================================
+ Copia los "Execution Time: X ms" de arriba en la tabla
+ comparativa del README/informe.
+============================================================
+===== corrida 2 =====
+============================================================
+ BENCHMARK  –  skip list vs B-tree vs seq scan
+ Dataset: bench_items (10 000 filas)
+============================================================
+ANALYZE
+
+--- CASO 1: Sequential Scan (sin índice) ---
+SET
+SET
+SET
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.007..0.227 rows=1.00 loops=1)
+   Filter: (valor = 106820)
+   Rows Removed by Filter: 9999
+   Buffers: shared hit=64
+ Planning:
+   Buffers: shared hit=17 read=1
+ Planning Time: 0.260 ms
+ Execution Time: 0.243 ms
+(8 rows)
+
+
+--- CASO 2: B-tree Index Scan ---
+DROP INDEX
+SET
+SET
+SET
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.018..0.018 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 1
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.042 ms
+ Execution Time: 0.024 ms
+(8 rows)
+
+
+--- CASO 3: Skip List Index ---
+DROP INDEX
+psql:/benchmark.sql:40: NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+ANALYZE
+SET
+SET
+SET
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.110..0.110 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 0
+   Buffers: shared hit=254
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.063 ms
+ Execution Time: 0.119 ms
+(8 rows)
+
+CREATE INDEX
+RESET
+RESET
+RESET
+
+============================================================
+ Copia los "Execution Time: X ms" de arriba en la tabla
+ comparativa del README/informe.
+============================================================
+===== corrida 3 =====
+============================================================
+ BENCHMARK  –  skip list vs B-tree vs seq scan
+ Dataset: bench_items (10 000 filas)
+============================================================
+ANALYZE
+
+--- CASO 1: Sequential Scan (sin índice) ---
+SET
+SET
+SET
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.007..0.220 rows=1.00 loops=1)
+   Filter: (valor = 106820)
+   Rows Removed by Filter: 9999
+   Buffers: shared hit=64
+ Planning:
+   Buffers: shared hit=17 read=1
+ Planning Time: 0.185 ms
+ Execution Time: 0.236 ms
+(8 rows)
+
+
+--- CASO 2: B-tree Index Scan ---
+DROP INDEX
+SET
+SET
+SET
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.046..0.046 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 1
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.045 ms
+ Execution Time: 0.053 ms
+(8 rows)
+
+
+--- CASO 3: Skip List Index ---
+DROP INDEX
+psql:/benchmark.sql:40: NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+ANALYZE
+SET
+SET
+SET
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.183..0.192 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 0
+   Buffers: shared hit=250
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.080 ms
+ Execution Time: 0.202 ms
+(8 rows)
+
+CREATE INDEX
+RESET
+RESET
+RESET
+
+============================================================
+ Copia los "Execution Time: X ms" de arriba en la tabla
+ comparativa del README/informe.
+============================================================
+===== corrida 4 =====
+============================================================
+ BENCHMARK  –  skip list vs B-tree vs seq scan
+ Dataset: bench_items (10 000 filas)
+============================================================
+ANALYZE
+
+--- CASO 1: Sequential Scan (sin índice) ---
+SET
+SET
+SET
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.005..0.252 rows=1.00 loops=1)
+   Filter: (valor = 106820)
+   Rows Removed by Filter: 9999
+   Buffers: shared hit=64
+ Planning:
+   Buffers: shared hit=17 read=1
+ Planning Time: 0.201 ms
+ Execution Time: 0.270 ms
+(8 rows)
+
+
+--- CASO 2: B-tree Index Scan ---
+DROP INDEX
+SET
+SET
+SET
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.028..0.028 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 1
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.045 ms
+ Execution Time: 0.035 ms
+(8 rows)
+
+
+--- CASO 3: Skip List Index ---
+DROP INDEX
+psql:/benchmark.sql:40: NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+ANALYZE
+SET
+SET
+SET
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.088..0.089 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 0
+   Buffers: shared hit=290
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.079 ms
+ Execution Time: 0.099 ms
+(8 rows)
+
+CREATE INDEX
+RESET
+RESET
+RESET
+
+============================================================
+ Copia los "Execution Time: X ms" de arriba en la tabla
+ comparativa del README/informe.
+============================================================
+===== corrida 5 =====
+============================================================
+ BENCHMARK  –  skip list vs B-tree vs seq scan
+ Dataset: bench_items (10 000 filas)
+============================================================
+ANALYZE
+
+--- CASO 1: Sequential Scan (sin índice) ---
+SET
+SET
+SET
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.007..0.312 rows=1.00 loops=1)
+   Filter: (valor = 106820)
+   Rows Removed by Filter: 9999
+   Buffers: shared hit=64
+ Planning:
+   Buffers: shared hit=17 read=1
+ Planning Time: 0.222 ms
+ Execution Time: 0.333 ms
+(8 rows)
+
+
+--- CASO 2: B-tree Index Scan ---
+DROP INDEX
+SET
+SET
+SET
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.030..0.031 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 1
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.048 ms
+ Execution Time: 0.038 ms
+(8 rows)
+
+
+--- CASO 3: Skip List Index ---
+DROP INDEX
+psql:/benchmark.sql:40: NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+ANALYZE
+SET
+SET
+SET
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.092..0.093 rows=1.00 loops=1)
+   Index Cond: (valor = 106820)
+   Index Searches: 0
+   Buffers: shared hit=286
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.054 ms
+ Execution Time: 0.102 ms
+(8 rows)
+
+CREATE INDEX
+RESET
+RESET
+RESET
+
+============================================================
+ Copia los "Execution Time: X ms" de arriba en la tabla
+ comparativa del README/informe.
+============================================================

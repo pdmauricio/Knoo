@@ -9,13 +9,9 @@
 \echo ' Dataset: bench_items (10 000 filas)'
 \echo '============================================================'
 
--- ─── Configuración ───────────────────────────────────────────────────────────
--- Aseguramos estadísticas frescas antes de medir
 ANALYZE bench_items;
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- CASO 1: Seq Scan (sin ningún índice activo)
--- ─────────────────────────────────────────────────────────────────────────────
 \echo ''
 \echo '--- CASO 1: Sequential Scan (sin índice) ---'
 SET enable_indexscan  = off;
@@ -23,42 +19,37 @@ SET enable_bitmapscan = off;
 SET enable_seqscan    = on;
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT id, valor FROM bench_items WHERE valor = 42000;
+SELECT id, valor FROM bench_items WHERE valor =  106820;
 
--- ─────────────────────────────────────────────────────────────────────────────
--- CASO 2: B-tree estándar
--- ─────────────────────────────────────────────────────────────────────────────
+-- CASO 2: B-tree estándar (eliminamos el skiplist para que no compita)
 \echo ''
 \echo '--- CASO 2: B-tree Index Scan ---'
+DROP INDEX IF EXISTS idx_bench_skiplist;
+
 SET enable_indexscan  = on;
 SET enable_bitmapscan = on;
 SET enable_seqscan    = off;
 
--- Forzamos el índice B-tree explícitamente
-/*+ IndexScan(bench_items idx_bench_btree) */
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT /*+ IndexScan(bench_items idx_bench_btree) */
-       id, valor
-FROM   bench_items
-WHERE  valor = 42000;
+SELECT id, valor FROM bench_items WHERE valor = 106820;
 
--- ─────────────────────────────────────────────────────────────────────────────
--- CASO 3: Skip List (extensión custom)
--- ─────────────────────────────────────────────────────────────────────────────
+-- CASO 3: Skip List (eliminamos el B-tree, mismo motivo)
 \echo ''
 \echo '--- CASO 3: Skip List Index ---'
--- Con amcostestimate mejorado, Postgres debería elegirlo solo.
--- Lo habilitamos explícitamente por si acaso:
+DROP INDEX IF EXISTS idx_bench_btree;
+CREATE INDEX idx_bench_skiplist ON bench_items USING skiplist (valor);
+ANALYZE bench_items;
+
 SET enable_indexscan  = on;
 SET enable_bitmapscan = off;
 SET enable_seqscan    = off;
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT id, valor FROM bench_items WHERE valor = 42000;
+SELECT id, valor FROM bench_items WHERE valor =  106820;
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Restaurar defaults
--- ─────────────────────────────────────────────────────────────────────────────
+-- Restaurar: dejar ambos índices disponibles de nuevo
+CREATE INDEX IF NOT EXISTS idx_bench_btree ON bench_items USING btree (valor);
+
 RESET enable_indexscan;
 RESET enable_bitmapscan;
 RESET enable_seqscan;
