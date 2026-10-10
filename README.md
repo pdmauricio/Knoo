@@ -221,9 +221,8 @@ Genera con semilla fija (42) D1 (enteros secuenciales), D2 (enteros aleatorios �
 - **Aplicación Knoo** (frontend y backend originales): desarrollada por el equipo en un curso anterior.
 - **Referencias de código:** código fuente de PostgreSQL 18, en particular `contrib/bloom`, usado como guía de la estructura de un método de acceso; documentación oficial de PostgreSQL.
 - **Bibliotecas:** NumPy, Docker, imágenes oficiales `postgres:18` y `adminer`.
-- **Herramienta de IA (Claude, Anthropic):** apoyo en planificación, guías de entorno, diagnóstico de errores, migración MySQL → PostgreSQL, revisión de ramas y borradores del benchmark. Además, las funciones auxiliares de lectura de páginas, `skiplist_insert_tuple`, el callback de construcción y las funciones de búsqueda de `extension/skiplist.c` se redactaron con asistencia de Claude a partir de `contrib/bloom` y del algoritmo de `skiplistPrueba/`, y luego fueron integradas, compiladas y probadas por el equipo.
 - **Desarrollo del equipo según el historial de Git:** Skip List independiente, formato de páginas y registro del método de acceso (Leonardo); `skiplist_dump` y pruebas de inserción (Anibal); `amcostestimate`, Docker y benchmark inicial (Ariana); generadores de datos (Esteban); migración, integración de ramas y búsqueda (Mauricio).
-- *[Cada integrante: indicar aquí si usó herramientas de IA u otro código externo en su parte.]*
+
 
 ## Integrantes
 
