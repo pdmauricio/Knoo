@@ -1,0 +1,3 @@
+extension/*.so
+extension/*.bc
+extension/*.o
