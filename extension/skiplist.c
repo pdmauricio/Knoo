@@ -21,9 +21,8 @@
 /* Macro obligatoria para la compatibilidad del módulo */
 PG_MODULE_MAGIC;
 
-/* ====================================================================
- * FUNCIONES AUXILIARES
- * ==================================================================== */
+/* 
+ * FUNCIONES AUXILIARES */
 
  /*
   * Crea una pagina nueva al final del indice y la devuelve bloqueada
