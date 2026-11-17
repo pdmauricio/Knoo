@@ -11,33 +11,32 @@ SET
 SET
                                                 QUERY PLAN                                                
 ----------------------------------------------------------------------------------------------------------
- Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.006..0.219 rows=1.00 loops=1)
-   Filter: (valor = 106820)
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.015..0.516 rows=1.00 loops=1)
+   Filter: (valor = 742945)
    Rows Removed by Filter: 9999
    Buffers: shared hit=64
  Planning:
-   Buffers: shared hit=17 read=1
- Planning Time: 1.103 ms
- Execution Time: 0.237 ms
+   Buffers: shared hit=20
+ Planning Time: 4.172 ms
+ Execution Time: 0.564 ms
 (8 rows)
 
 
 --- CASO 2: B-tree Index Scan ---
 DROP INDEX
+psql:/benchmark.sql:27: NOTICE:  index "idx_bench_skiplist" does not exist, skipping
 SET
 SET
 SET
                                                            QUERY PLAN                                                           
 --------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.727..0.727 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=1.220..1.223 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 1
    Buffers: shared hit=1 read=2
- Planning:
-   Buffers: shared hit=6 dirtied=1
- Planning Time: 0.043 ms
- Execution Time: 0.734 ms
-(8 rows)
+ Planning Time: 0.084 ms
+ Execution Time: 1.252 ms
+(6 rows)
 
 
 --- CASO 3: Skip List Index ---
@@ -50,14 +49,14 @@ SET
 SET
                                                              QUERY PLAN                                                              
 -------------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.067..0.067 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.983..0.985 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 0
-   Buffers: shared hit=320
+   Buffers: shared hit=1978
  Planning:
-   Buffers: shared hit=8
- Planning Time: 0.054 ms
- Execution Time: 0.076 ms
+   Buffers: shared hit=10
+ Planning Time: 0.136 ms
+ Execution Time: 1.001 ms
 (8 rows)
 
 CREATE INDEX
@@ -82,14 +81,14 @@ SET
 SET
                                                 QUERY PLAN                                                
 ----------------------------------------------------------------------------------------------------------
- Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.007..0.227 rows=1.00 loops=1)
-   Filter: (valor = 106820)
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.012..0.484 rows=1.00 loops=1)
+   Filter: (valor = 742945)
    Rows Removed by Filter: 9999
    Buffers: shared hit=64
  Planning:
    Buffers: shared hit=17 read=1
- Planning Time: 0.260 ms
- Execution Time: 0.243 ms
+ Planning Time: 0.601 ms
+ Execution Time: 0.522 ms
 (8 rows)
 
 
@@ -100,14 +99,14 @@ SET
 SET
                                                            QUERY PLAN                                                           
 --------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.018..0.018 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.044..0.046 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 1
    Buffers: shared hit=1 read=2
  Planning:
    Buffers: shared hit=6
- Planning Time: 0.042 ms
- Execution Time: 0.024 ms
+ Planning Time: 0.304 ms
+ Execution Time: 0.080 ms
 (8 rows)
 
 
@@ -121,14 +120,14 @@ SET
 SET
                                                              QUERY PLAN                                                              
 -------------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.110..0.110 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=1.475..1.478 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 0
-   Buffers: shared hit=254
+   Buffers: shared hit=1914
  Planning:
    Buffers: shared hit=8
- Planning Time: 0.063 ms
- Execution Time: 0.119 ms
+ Planning Time: 0.391 ms
+ Execution Time: 1.497 ms
 (8 rows)
 
 CREATE INDEX
@@ -153,14 +152,14 @@ SET
 SET
                                                 QUERY PLAN                                                
 ----------------------------------------------------------------------------------------------------------
- Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.007..0.220 rows=1.00 loops=1)
-   Filter: (valor = 106820)
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.010..0.469 rows=1.00 loops=1)
+   Filter: (valor = 742945)
    Rows Removed by Filter: 9999
    Buffers: shared hit=64
  Planning:
    Buffers: shared hit=17 read=1
- Planning Time: 0.185 ms
- Execution Time: 0.236 ms
+ Planning Time: 0.275 ms
+ Execution Time: 0.504 ms
 (8 rows)
 
 
@@ -171,14 +170,14 @@ SET
 SET
                                                            QUERY PLAN                                                           
 --------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.046..0.046 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.080..0.082 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 1
    Buffers: shared hit=1 read=2
  Planning:
    Buffers: shared hit=6
- Planning Time: 0.045 ms
- Execution Time: 0.053 ms
+ Planning Time: 0.184 ms
+ Execution Time: 0.115 ms
 (8 rows)
 
 
@@ -192,14 +191,14 @@ SET
 SET
                                                              QUERY PLAN                                                              
 -------------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.183..0.192 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=1.141..1.144 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 0
-   Buffers: shared hit=250
+   Buffers: shared hit=1882
  Planning:
    Buffers: shared hit=8
- Planning Time: 0.080 ms
- Execution Time: 0.202 ms
+ Planning Time: 0.186 ms
+ Execution Time: 1.161 ms
 (8 rows)
 
 CREATE INDEX
@@ -224,14 +223,14 @@ SET
 SET
                                                 QUERY PLAN                                                
 ----------------------------------------------------------------------------------------------------------
- Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.005..0.252 rows=1.00 loops=1)
-   Filter: (valor = 106820)
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.013..0.461 rows=1.00 loops=1)
+   Filter: (valor = 742945)
    Rows Removed by Filter: 9999
    Buffers: shared hit=64
  Planning:
    Buffers: shared hit=17 read=1
- Planning Time: 0.201 ms
- Execution Time: 0.270 ms
+ Planning Time: 0.503 ms
+ Execution Time: 0.499 ms
 (8 rows)
 
 
@@ -242,14 +241,14 @@ SET
 SET
                                                            QUERY PLAN                                                           
 --------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.028..0.028 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.032..0.033 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 1
    Buffers: shared hit=1 read=2
  Planning:
    Buffers: shared hit=6
- Planning Time: 0.045 ms
- Execution Time: 0.035 ms
+ Planning Time: 0.200 ms
+ Execution Time: 0.060 ms
 (8 rows)
 
 
@@ -263,14 +262,14 @@ SET
 SET
                                                              QUERY PLAN                                                              
 -------------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.088..0.089 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.848..0.850 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 0
-   Buffers: shared hit=290
+   Buffers: shared hit=1814
  Planning:
    Buffers: shared hit=8
- Planning Time: 0.079 ms
- Execution Time: 0.099 ms
+ Planning Time: 0.107 ms
+ Execution Time: 0.865 ms
 (8 rows)
 
 CREATE INDEX
@@ -295,14 +294,14 @@ SET
 SET
                                                 QUERY PLAN                                                
 ----------------------------------------------------------------------------------------------------------
- Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.007..0.312 rows=1.00 loops=1)
-   Filter: (valor = 106820)
+ Seq Scan on bench_items  (cost=0.00..189.00 rows=1 width=8) (actual time=0.011..0.484 rows=1.00 loops=1)
+   Filter: (valor = 742945)
    Rows Removed by Filter: 9999
    Buffers: shared hit=64
  Planning:
    Buffers: shared hit=17 read=1
- Planning Time: 0.222 ms
- Execution Time: 0.333 ms
+ Planning Time: 0.352 ms
+ Execution Time: 0.522 ms
 (8 rows)
 
 
@@ -313,14 +312,14 @@ SET
 SET
                                                            QUERY PLAN                                                           
 --------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.030..0.031 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_btree on bench_items  (cost=0.29..8.30 rows=1 width=8) (actual time=0.032..0.033 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 1
    Buffers: shared hit=1 read=2
  Planning:
    Buffers: shared hit=6
- Planning Time: 0.048 ms
- Execution Time: 0.038 ms
+ Planning Time: 0.117 ms
+ Execution Time: 0.060 ms
 (8 rows)
 
 
@@ -334,14 +333,14 @@ SET
 SET
                                                              QUERY PLAN                                                              
 -------------------------------------------------------------------------------------------------------------------------------------
- Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.092..0.093 rows=1.00 loops=1)
-   Index Cond: (valor = 106820)
+ Index Scan using idx_bench_skiplist on bench_items  (cost=57.15..61.17 rows=1 width=8) (actual time=0.900..0.902 rows=1.00 loops=1)
+   Index Cond: (valor = 742945)
    Index Searches: 0
-   Buffers: shared hit=286
+   Buffers: shared hit=1868
  Planning:
    Buffers: shared hit=8
- Planning Time: 0.054 ms
- Execution Time: 0.102 ms
+ Planning Time: 0.231 ms
+ Execution Time: 0.918 ms
 (8 rows)
 
 CREATE INDEX

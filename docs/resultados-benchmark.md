@@ -1,7 +1,7 @@
 # Primera comparación: sin índice vs B-tree vs Skip List
 
 - Tabla: `bench_items`, 10 000 filas (`db/init_skiplist.sql`)
-- Consulta: `SELECT id, valor FROM bench_items WHERE valor = 106820;` 
+- Consulta: `SELECT id, valor FROM bench_items WHERE valor = 742945;` 
 - PostgreSQL 18 en Docker (contenedor `knoo_pg`)
 - 5 corridas por caso; se reporta la **mediana**, porque no la distorsionan las corridas atípicas (por ejemplo, la primera con caché fría)
 

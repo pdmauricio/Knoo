@@ -139,7 +139,7 @@ RESET enable_seqscan;
 
 ## Benchmark: sin índice vs B-tree vs Skip List
 
-`db/benchmark.sql` mide la misma consulta (`WHERE valor = 106820`) en tres casos. En cada caso hay **un solo índice disponible** para que el planificador no tenga ambigüedad.
+`db/benchmark.sql` mide la misma consulta (`WHERE valor = 742945`) en tres casos. En cada caso hay **un solo índice disponible** para que el planificador no tenga ambigüedad.
 
 ```bash
 docker cp db/benchmark.sql knoo_pg:/benchmark.sql
@@ -168,7 +168,7 @@ grep "^ Execution Time:" resultados/completo.txt > resultados/tiempos.txt
 
 Detalle, condiciones y limitaciones en [`docs/resultados-benchmark.md`](docs/resultados-benchmark.md).
 
-> **Importante:** los datos de `bench_items` se generan con `random()` sin semilla. Si en tu copia los planes muestran `rows=0.00`, la clave 106820 no existe en tus datos. Elige una existente con `SELECT valor FROM bench_items LIMIT 1;` y reemplaza `106820` en `db/benchmark.sql`.
+> **Importante:** los datos de `bench_items` se generan con `random()` sin semilla. Si en tu copia los planes muestran `rows=0.00`, la clave 742945 no existe en tus datos. Elige una existente con `SELECT valor FROM bench_items LIMIT 1;` y reemplaza `742945` en `db/benchmark.sql`.
 
 ## Datasets reproducibles
 

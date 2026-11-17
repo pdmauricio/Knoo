@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS bench_items (
     valor   INTEGER NOT NULL,
     texto   TEXT
 );
-
+SELECT setseed(0.42);
 -- Insertar 10 000 filas de prueba
 INSERT INTO bench_items (id, valor, texto)
 SELECT

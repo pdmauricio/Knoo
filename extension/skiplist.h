@@ -1,6 +1,6 @@
 #ifndef SKIPLIST_H
 #define SKIPLIST_H
-
+#define SKIPLIST_MAXLEVEL 16
 #include "postgres.h"
 #include "storage/block.h"
 

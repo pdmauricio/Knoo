@@ -181,11 +181,16 @@ static void skiplist_build_callback(Relation index, ItemPointer tid, Datum* valu
  * Pieza 5: Estado de un escaneo (búsqueda) en curso
  * ==================================================================== */
 typedef struct SkipListScanOpaqueData {
-    Datum   search_key;        /* el valor que busca el WHERE columna = X */
-    bool    key_is_set;        /* ¿ya nos dieron un valor para buscar? */
-    bool    already_returned;  /* como es busqueda por igualdad, hay máximo 1 resultado */
+    bool        has_low;       /* hay cota inferior (>, >=, =) */
+    Datum       low_key;
+    bool        low_strict;    /* true si es '>' (excluye la clave) */
+    bool        has_high;      /* hay cota superior (<, <=, =) */
+    Datum       high_key;
+    bool        high_strict;   /* true si es '<' (excluye la clave) */
+    bool        impossible;    /* clave NULL: no hay resultados posibles */
+    bool        started;       /* ya se hizo el descenso inicial */
+    BlockNumber next_block;    /* siguiente nodo por examinar en el nivel 0 */
 } SkipListScanOpaqueData;
-
 typedef SkipListScanOpaqueData *SkipListScanOpaque;
 
 /* ====================================================================
@@ -300,6 +305,76 @@ static void skiplistcostestimate(PlannerInfo *root, IndexPath *path, double loop
  * CICLO DE BÚSQUEDA (Issue #11)
  * ==================================================================== */
 
+ /* Lee de una sola vez la clave, el siguiente nodo (nivel 0) y el TID de un nodo.
+ * No usar con el bloque 0: la cabecera no tiene tupla. */
+static void skiplist_read_node(Relation index, BlockNumber blk, Datum *key,
+                               BlockNumber *next, ItemPointerData *tid) {
+    Buffer         buffer;
+    Page           page;
+    ItemId         itemid;
+    IndexTuple     itup;
+    bool           isnull;
+    SkipListOpaque op;
+
+    buffer = ReadBuffer(index, blk);
+    LockBuffer(buffer, BUFFER_LOCK_SHARE);
+    page = BufferGetPage(buffer);
+    itemid = PageGetItemId(page, FirstOffsetNumber);
+    itup = (IndexTuple) PageGetItem(page, itemid);
+    *key = index_getattr(itup, 1, RelationGetDescr(index), &isnull);
+    *tid = itup->t_tid;
+    op = (SkipListOpaque) PageGetSpecialPointer(page);
+    *next = op->forward[0];
+    UnlockReleaseBuffer(buffer);
+}
+
+/* Primer nodo de la lista (el siguiente a la cabecera en el nivel 0) */
+static BlockNumber skiplist_first_node(Relation index) {
+    SkipListOpaqueData head;
+    skiplist_get_opaque(index, 0, &head);
+    return head.forward[0];
+}
+
+/* Primer nodo con clave >= key: el mismo descenso por niveles que usa la inserción */
+static BlockNumber skiplist_first_ge(Relation index, Datum key) {
+    BlockNumber        cur = 0;
+    SkipListOpaqueData cur_op;
+    int                i;
+
+    skiplist_get_opaque(index, cur, &cur_op);
+    for (i = SKIPLIST_MAXLEVEL - 1; i >= 0; i--) {
+        while (cur_op.forward[i] != InvalidBlockNumber) {
+            bool  isnull;
+            Datum nk = skiplist_get_key(index, cur_op.forward[i], &isnull);
+            if (skiplist_compare(nk, key) < 0) {
+                cur = cur_op.forward[i];
+                skiplist_get_opaque(index, cur, &cur_op);
+            } else
+                break;
+        }
+    }
+    return cur_op.forward[0];
+}
+
+/* Si llegan varias condiciones del mismo lado, nos quedamos con la más estricta */
+static void skiplist_tighten_low(SkipListScanOpaque so, Datum v, bool strict) {
+    if (!so->has_low) {
+        so->has_low = true; so->low_key = v; so->low_strict = strict;
+    } else {
+        int c = skiplist_compare(v, so->low_key);
+        if (c > 0 || (c == 0 && strict)) { so->low_key = v; so->low_strict = strict; }
+    }
+}
+
+static void skiplist_tighten_high(SkipListScanOpaque so, Datum v, bool strict) {
+    if (!so->has_high) {
+        so->has_high = true; so->high_key = v; so->high_strict = strict;
+    } else {
+        int c = skiplist_compare(v, so->high_key);
+        if (c < 0 || (c == 0 && strict)) { so->high_key = v; so->high_strict = strict; }
+    }
+}
+
 static IndexScanDesc skiplistbeginscan(Relation rel, int nkeys, int norderbys) {
     IndexScanDesc scan;
     scan = RelationGetIndexScan(rel, nkeys, norderbys);
@@ -310,68 +385,72 @@ static IndexScanDesc skiplistbeginscan(Relation rel, int nkeys, int norderbys) {
 static void skiplistrescan(IndexScanDesc scan, ScanKey keys, int nkeys,
                            ScanKey orderbys, int norderbys) {
     SkipListScanOpaque so = (SkipListScanOpaque) scan->opaque;
-    so->key_is_set = false;
-    so->already_returned = false;
-    if (nkeys > 0 && keys != NULL) {
-        so->search_key = keys[0].sk_argument;
-        so->key_is_set = true;
+    int i;
+
+    memset(so, 0, sizeof(SkipListScanOpaqueData));
+    so->next_block = InvalidBlockNumber;
+
+    for (i = 0; i < nkeys; i++) {
+        ScanKey sk = &keys[i];
+        Datum   v;
+
+        if (sk->sk_flags & SK_ISNULL) { so->impossible = true; continue; }
+        v = sk->sk_argument;
+
+        /* sk_strategy es el número con que registramos el operador en skiplist--1.0.sql */
+        switch (sk->sk_strategy) {
+            case 1: skiplist_tighten_high(so, v, true);  break;   /* <  */
+            case 2: skiplist_tighten_high(so, v, false); break;   /* <= */
+            case 3: skiplist_tighten_low(so, v, false);
+                    skiplist_tighten_high(so, v, false); break;   /* =  */
+            case 4: skiplist_tighten_low(so, v, false);  break;   /* >= */
+            case 5: skiplist_tighten_low(so, v, true);   break;   /* >  */
+            default: break;
+        }
     }
 }
 
 static bool skiplistgettuple(IndexScanDesc scan, ScanDirection dir) {
     SkipListScanOpaque so = (SkipListScanOpaque) scan->opaque;
-    Relation    index = scan->indexRelation;
-    BlockNumber current_block = 0;      /* header */
-    SkipListOpaqueData current_opaque;
-    int         i;
-    BlockNumber candidate;
-    Datum       candidate_key;
-    bool        candidate_isnull;
+    Relation index = scan->indexRelation;
 
-    if (!so->key_is_set || so->already_returned)
+    if (so->impossible)
         return false;
 
-    so->already_returned = true;
+    /* Primera llamada: ubicar el primer candidato */
+    if (!so->started) {
+        so->started = true;
+        so->next_block = so->has_low ? skiplist_first_ge(index, so->low_key)
+                                     : skiplist_first_node(index);
+    }
 
-    skiplist_get_opaque(index, current_block, &current_opaque);
-    for (i = SKIPLIST_MAXLEVEL - 1; i >= 0; i--) {
-        while (current_opaque.forward[i] != InvalidBlockNumber) {
-            bool  next_isnull;
-            Datum next_key = skiplist_get_key(index, current_opaque.forward[i], &next_isnull);
-            if (skiplist_compare(next_key, so->search_key) < 0) {
-                current_block = current_opaque.forward[i];
-                skiplist_get_opaque(index, current_block, &current_opaque);
-            } else {
-                break;
+    /* Cada llamada devuelve UNA fila y recuerda por dónde va en so->next_block */
+    while (so->next_block != InvalidBlockNumber) {
+        Datum           key;
+        BlockNumber     next;
+        ItemPointerData tid;
+
+        skiplist_read_node(index, so->next_block, &key, &next, &tid);
+        so->next_block = next;
+
+        /* '>' excluye las claves iguales al límite inferior */
+        if (so->has_low && so->low_strict && skiplist_compare(key, so->low_key) == 0)
+            continue;
+
+        /* La lista está ordenada: al pasar la cota superior ya no hay más */
+        if (so->has_high) {
+            int c = skiplist_compare(key, so->high_key);
+            if (c > 0 || (c == 0 && so->high_strict)) {
+                so->next_block = InvalidBlockNumber;
+                return false;
             }
         }
-    }
 
-    candidate = current_opaque.forward[0];
-    if (candidate == InvalidBlockNumber)
-        return false;
-
-    candidate_key = skiplist_get_key(index, candidate, &candidate_isnull);
-    if (skiplist_compare(candidate_key, so->search_key) != 0)
-        return false;
-
-    {
-        Buffer     buf = ReadBuffer(index, candidate);
-        Page       page;
-        ItemId     itemid;
-        IndexTuple itup;
-
-        LockBuffer(buf, BUFFER_LOCK_SHARE);
-        page = BufferGetPage(buf);
-        itemid = PageGetItemId(page, FirstOffsetNumber);
-        itup = (IndexTuple) PageGetItem(page, itemid);
-
-        scan->xs_heaptid = itup->t_tid;
+        scan->xs_heaptid = tid;
         scan->xs_recheck = false;
-        UnlockReleaseBuffer(buf);
+        return true;
     }
-
-    return true;
+    return false;
 }
 
 static void skiplistendscan(IndexScanDesc scan) {

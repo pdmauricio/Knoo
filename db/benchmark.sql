@@ -19,7 +19,7 @@ SET enable_bitmapscan = off;
 SET enable_seqscan    = on;
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT id, valor FROM bench_items WHERE valor =  106820;
+SELECT id, valor FROM bench_items WHERE valor =  742945;
 
 -- CASO 2: B-tree estándar (eliminamos el skiplist para que no compita)
 \echo ''
@@ -31,7 +31,7 @@ SET enable_bitmapscan = on;
 SET enable_seqscan    = off;
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT id, valor FROM bench_items WHERE valor = 106820;
+SELECT id, valor FROM bench_items WHERE valor = 742945;
 
 -- CASO 3: Skip List (eliminamos el B-tree, mismo motivo)
 \echo ''
@@ -45,7 +45,7 @@ SET enable_bitmapscan = off;
 SET enable_seqscan    = off;
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT id, valor FROM bench_items WHERE valor =  106820;
+SELECT id, valor FROM bench_items WHERE valor =  742945;
 
 -- Restaurar: dejar ambos índices disponibles de nuevo
 CREATE INDEX IF NOT EXISTS idx_bench_btree ON bench_items USING btree (valor);
