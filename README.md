@@ -168,7 +168,6 @@ grep "^ Execution Time:" resultados/completo.txt > resultados/tiempos.txt
 
 Detalle, condiciones y limitaciones en [`docs/resultados-benchmark.md`](docs/resultados-benchmark.md).
 
-> **Importante:** los datos de `bench_items` se generan con `random()` sin semilla. Si en tu copia los planes muestran `rows=0.00`, la clave 742945 no existe en tus datos. Elige una existente con `SELECT valor FROM bench_items LIMIT 1;` y reemplaza `742945` en `db/benchmark.sql`.
 
 ## Datasets reproducibles
 

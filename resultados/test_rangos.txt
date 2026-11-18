@@ -1,6 +1,6 @@
 NOTICE:  extension "skiplist" already exists, skipping
-CREATE EXTENSION
 NOTICE:  table "t_rng" does not exist, skipping
+CREATE EXTENSION
 DROP TABLE
 CREATE TABLE
  setseed 
@@ -23,6 +23,6 @@ SET
 (3 rows)
 
 RESET
+NOTICE:  Casos: 400, fallos: 0
 DO
 OK: el indice skiplist coincide con el recorrido secuencial en todos los casos
-NOTICE:  Casos: 400, fallos: 0
