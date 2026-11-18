@@ -4,69 +4,69 @@ Timing is on.
  
 (1 row)
 
-Time: 1.279 ms
+Time: 4.307 ms
 DROP TABLE
-Time: 15.003 ms
+Time: 14.086 ms
 CREATE TABLE
-Time: 3.756 ms
+Time: 13.029 ms
 INSERT 0 100000
-Time: 215.457 ms
+Time: 313.888 ms
 ANALYZE
-Time: 41.353 ms
+Time: 34.627 ms
 === CONSTRUCCION del indice skiplist (ver Time:) ===
 NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
 CREATE INDEX
-Time: 235933.497 ms (03:55.933)
+Time: 7445.414 ms (00:07.445)
  tamano_skiplist | paginas 
 -----------------+---------
  781 MB          |  100001
 (1 row)
 
-Time: 1.455 ms
+Time: 1.777 ms
 SET
-Time: 0.209 ms
+Time: 0.267 ms
 === BUSQUEDA por igualdad (fijarse en Execution Time y Buffers) ===
                                                    QUERY PLAN                                                    
 -----------------------------------------------------------------------------------------------------------------
- Index Scan using esc_sl on esc  (cost=70.44..74.46 rows=1 width=8) (actual time=4.859..4.867 rows=1.00 loops=1)
+ Index Scan using esc_sl on esc  (cost=70.44..74.46 rows=1 width=8) (actual time=0.128..0.138 rows=1.00 loops=1)
    Index Cond: (valor = 50000)
    Index Searches: 0
-   Buffers: shared hit=12220 read=8
+   Buffers: shared hit=27 read=9 written=3
  Planning:
-   Buffers: shared hit=7 read=11 dirtied=1
- Planning Time: 0.374 ms
- Execution Time: 4.885 ms
+   Buffers: shared hit=6 read=12 dirtied=2 written=4
+ Planning Time: 0.355 ms
+ Execution Time: 0.159 ms
 (8 rows)
 
-Time: 6.307 ms
+Time: 1.231 ms
 === RANGO de 100 claves ===
                                                         QUERY PLAN                                                        
 --------------------------------------------------------------------------------------------------------------------------
- Aggregate  (cost=74.69..74.70 rows=1 width=8) (actual time=6.411..6.412 rows=1.00 loops=1)
-   Buffers: shared hit=12256 read=170
-   ->  Index Scan using esc_sl on esc  (cost=70.44..74.46 rows=95 width=0) (actual time=4.850..6.386 rows=100.00 loops=1)
+ Aggregate  (cost=74.70..74.71 rows=1 width=8) (actual time=2.211..2.213 rows=1.00 loops=1)
+   Buffers: shared hit=69 read=165 written=65
+   ->  Index Scan using esc_sl on esc  (cost=70.44..74.46 rows=98 width=0) (actual time=0.036..2.182 rows=100.00 loops=1)
          Index Cond: ((valor >= 50000) AND (valor <= 50099))
          Index Searches: 0
-         Buffers: shared hit=12256 read=170
+         Buffers: shared hit=69 read=165 written=65
  Planning:
-   Buffers: shared hit=13 read=2
- Planning Time: 0.119 ms
- Execution Time: 6.437 ms
+   Buffers: shared hit=13 read=2 written=1
+ Planning Time: 0.182 ms
+ Execution Time: 2.245 ms
 (10 rows)
 
-Time: 7.283 ms
+Time: 3.407 ms
 RESET
-Time: 0.244 ms
+Time: 0.349 ms
 DROP INDEX
-Time: 87.092 ms
+Time: 83.101 ms
 === B-tree de referencia ===
 CREATE INDEX
-Time: 74.951 ms
+Time: 65.428 ms
  tamano_btree 
 --------------
  2208 kB
 (1 row)
 
-Time: 0.462 ms
+Time: 0.567 ms
 DROP INDEX
-Time: 1.998 ms
+Time: 2.207 ms

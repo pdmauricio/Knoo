@@ -1,0 +1,28 @@
+NOTICE:  extension "skiplist" already exists, skipping
+CREATE EXTENSION
+NOTICE:  table "t_rng" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+ setseed 
+---------
+ 
+(1 row)
+
+INSERT 0 5000
+INSERT 0 4
+NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+ANALYZE
+--- Plan con el índice (debe decir Index Scan using t_rng_sl) ---
+SET
+                                   QUERY PLAN                                    
+---------------------------------------------------------------------------------
+ Aggregate  (cost=63.42..63.43 rows=1 width=8)
+   ->  Index Scan using t_rng_sl on t_rng  (cost=53.16..57.17 rows=2500 width=0)
+         Index Cond: (v > 500)
+(3 rows)
+
+RESET
+DO
+OK: el indice skiplist coincide con el recorrido secuencial en todos los casos
+NOTICE:  Casos: 400, fallos: 0

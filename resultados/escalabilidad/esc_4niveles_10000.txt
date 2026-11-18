@@ -1,0 +1,73 @@
+Timing is on.
+ setseed 
+---------
+ 
+(1 row)
+
+Time: 0.972 ms
+DROP TABLE
+Time: 0.415 ms
+NOTICE:  table "esc" does not exist, skipping
+CREATE TABLE
+Time: 9.221 ms
+INSERT 0 10000
+Time: 26.438 ms
+ANALYZE
+Time: 5.908 ms
+=== CONSTRUCCION del indice skiplist (ver Time:) ===
+NOTICE:  skiplistbuild: Pagina raiz (Bloque 0) inicializada en el disco exitosamente.
+CREATE INDEX
+Time: 1568.215 ms (00:01.568)
+ tamano_skiplist | paginas 
+-----------------+---------
+ 78 MB           |   10001
+(1 row)
+
+Time: 0.820 ms
+SET
+Time: 0.285 ms
+=== BUSQUEDA por igualdad (fijarse en Execution Time y Buffers) ===
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Index Scan using esc_sl on esc  (cost=57.15..61.17 rows=1 width=8) (actual time=0.484..0.486 rows=1.00 loops=1)
+   Index Cond: (valor = 5000)
+   Index Searches: 0
+   Buffers: shared hit=1262
+ Planning:
+   Buffers: shared hit=20
+ Planning Time: 0.138 ms
+ Execution Time: 0.499 ms
+(8 rows)
+
+Time: 1.076 ms
+=== RANGO de 100 claves ===
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=61.42..61.43 rows=1 width=8) (actual time=0.617..0.618 rows=1.00 loops=1)
+   Buffers: shared hit=1456
+   ->  Index Scan using esc_sl on esc  (cost=57.15..61.17 rows=100 width=0) (actual time=0.479..0.606 rows=100.00 loops=1)
+         Index Cond: ((valor >= 5000) AND (valor <= 5099))
+         Index Searches: 0
+         Buffers: shared hit=1456
+ Planning:
+   Buffers: shared hit=15
+ Planning Time: 0.097 ms
+ Execution Time: 0.636 ms
+(10 rows)
+
+Time: 1.223 ms
+RESET
+Time: 0.224 ms
+DROP INDEX
+Time: 13.565 ms
+=== B-tree de referencia ===
+CREATE INDEX
+Time: 7.988 ms
+ tamano_btree 
+--------------
+ 240 kB
+(1 row)
+
+Time: 0.746 ms
+DROP INDEX
+Time: 1.923 ms

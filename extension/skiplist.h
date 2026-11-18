@@ -1,11 +1,9 @@
 #ifndef SKIPLIST_H
 #define SKIPLIST_H
-#define SKIPLIST_MAXLEVEL 16
+#define SKIPLIST_MAXLEVEL 16     // línea 3: lo que agregaste
 #include "postgres.h"
 #include "storage/block.h"
 
-
-#define SKIPLIST_MAXLEVEL 4 
 
 typedef struct SkipListOpaqueData {
     uint16      max_level;                     
